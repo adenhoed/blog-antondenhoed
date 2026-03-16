@@ -1,0 +1,51 @@
+name: Build and Deploy
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/adenhoed/blog-antondenhoed
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - uses: actions/checkout@v4
+        with:
+          repository: adenhoed/infra-proxmox-terraform
+          token: ${{ secrets.INFRA_REPO_PAT }}
+          path: infra
+
+      - name: Update image tag
+        run: |
+          cd infra
+          sed -i "s|image: ${{ env.IMAGE }}:.*|image: ${{ env.IMAGE }}:${{ github.sha }}|" \
+            kubernetes/apps/hugo-blog/deployment.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add kubernetes/apps/hugo-blog/deployment.yaml
+          git commit -m "chore: update hugo-blog image to ${{ github.sha }}"
+          git push

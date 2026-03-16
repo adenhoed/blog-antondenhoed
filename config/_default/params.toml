@@ -1,0 +1,13 @@
+colorScheme = "congo"
+defaultAppearance = "light"
+autoSwitchAppearance = true
+
+[homepage]
+  layout = "page"
+  showRecent = true
+  recentLimit = 5
+
+[article]
+  showDate = true
+  showReadingTime = true
+  showTableOfContents = false

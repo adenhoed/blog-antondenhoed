@@ -1,0 +1,4 @@
+baseURL = "https://blog.antondenhoed.nl/"
+languageCode = "en"
+title = "Anton den Hoed"
+theme = "congo"
